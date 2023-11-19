@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Your existing styles here */
+    body {
+      background-image: url('back.png'); /* Replace 'back.png' with the URL of your background image */
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    #container {
+      display: flex;
+      flex-direction: column; /* Display folders vertically */
+      align-items: flex-start; /* Align folders to the left */
+      background-color: rgba(255, 255, 255, 0.5); /* Add a semi-transparent white background for better visibility */
+      padding: 20px;
+    }
+    .folder {
+      display: inline-block;
+      padding: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative; /* Change to relative position */
+      margin-bottom: 10px; /* Add margin to create spacing between folders */
+    }
+    .icon {
+      display: inline-block;
+      margin-right: 10px;
+    }
+    .content {
+      display: none;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <div class="folder" id="folder1" draggable="true" ondragstart="drag(event)" onclick="toggleFolder('folder1')"> 
+    <span class="icon" id="icon1">📂</span>
+    Folder 1
+    <div class="content" id="content1">Lorem Ipsum Text 1</div>
+  </div>
+  <div class="folder" id="folder2" draggable="true" ondragstart="drag(event)" onclick="toggleFolder('folder2')"> 
+    <span class="icon" id="icon2">📂</span>
+    Folder 2
+    <div class="content" id="content2">Lorem Ipsum Text 2</div>
+  </div>
+</div>
+
+<script>
+  function toggleFolder(folderId) {
+    const folder = document.getElementById(folderId);
+    const content = document.getElementById(`content${folderId[6]}`);
+    const weightClick = 0.6;
+    const weightTime = 0.4;
+
+    if (folder.classList.contains('open')) {
+      folder.classList.remove('open');
+      content.style.display = 'none';
+
+      const clickCount = getClickCount(folderId);
+      const elapsedTime = getElapsedTime(folderId);
+      updateColor(folderId, folder, weightClick, weightTime, clickCount, elapsedTime);
+      updateLocalStorage(folderId, clickCount + 1, elapsedTime);
+    } else {
+      folder.classList.add('open');
+      content.style.display = 'block';
+      // Reset start time when folder is opened
+      localStorage.setItem(`${folderId}_start`, new Date().getTime());
+    }
+  }
+
+  function updateColor(folderId, folder, weightClick, weightTime, clickCount, elapsedTime) {
+    const maxClicks = 8;
+
+    const darkeningFactor = (maxClicks - Math.min(clickCount, maxClicks)) / maxClicks * weightClick +
+                            (elapsedTime / 10) * weightTime; // Normalize time to a 0-1 scale (assuming max 10 seconds)
+
+    const r = Math.floor((255 * darkeningFactor + 0 * (1 - darkeningFactor)));
+    const g = Math.floor((255 * darkeningFactor + 0 * (1 - darkeningFactor)));
+    const b = Math.floor((255 * darkeningFactor + 139 * (1 - darkeningFactor)));
+
+    folder.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+  }
+
+  function getElapsedTime(folderId) {
+    const startTime = parseInt(localStorage.getItem(`${folderId}_start`), 10);
+    const endTime = new Date().getTime();
+    return Math.min((endTime - startTime) / 1000, 10); // convert milliseconds to seconds, with a maximum of 10 seconds
+  }
+
+  function getClickCount(folderId) {
+    return parseInt(localStorage.getItem(`${folderId}_clicks`), 10) || 0;
+  }
+
+  function updateLocalStorage(folderId, clickCount, elapsedTime) {   // storing the click-count in the local storage.
+    localStorage.setItem(`${folderId}_clicks`, clickCount);
+    console.log(`Click count for ${folderId}:`, clickCount);
+
+    localStorage.setItem(`${folderId}_time`, elapsedTime);
+    console.log(`Time spent for ${folderId}:`, elapsedTime);
+  }
+
+  function drag(event) {
+    event.dataTransfer.setData('folderId', event.target.id);
+  }
+
+</script>
+
+</body>
+</html>
